@@ -1,15 +1,13 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcrypt";
 import type { NextAuthOptions } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { LoginSchema } from "@/schema/auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { email } from "zod";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-
   session: {
     strategy: "jwt",
   },
@@ -39,10 +37,18 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) return null;
+        if (!user.username) {
+          console.error("User missing username:", user.email);
+          return null;
+        }
+
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) return null;
 
-        return user;
+        return {
+          ...user,
+          username: user.username as string,
+        };
       },
     }),
   ],
@@ -50,6 +56,13 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+
+        if (!user.email) {
+          throw new Error("User Email is required");
+        }
+        if (!user.username) {
+          throw new Error("User Username is required");
+        }
         token.id = user.id;
         token.email = user.email;
         token.username = user.username;
