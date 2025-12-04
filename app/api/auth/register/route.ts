@@ -9,13 +9,12 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const parsed = RegisterSchema.safeParse(body);
-    
+
     if (!parsed.success) {
       return NextResponse.json({ message: "Invalid Input" }, { status: 400 });
     }
 
     const { email, password, username } = parsed.data;
-    //existing already
 
     const existingUser = await prisma.user.findFirst({
       where: {
