@@ -6,7 +6,7 @@ export default async function Protectedpage() {
   if (!session) {
     return <div>Not logged</div>
   }
-
+  consol.log("projext is on hold");
   return (
     <div>
       <pre>{JSON.stringify(session, null, 2)}</pre>
